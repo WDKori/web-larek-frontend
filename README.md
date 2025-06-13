@@ -52,7 +52,7 @@ src/
 **Конструктор:**
 
 ```ts
--`constructor(baseUrl: string, options: RequestInit)`;
+-constructor(baseUrl: string, options: RequestInit);
 ```
 
 - `baseUrl: string` - базовый URL API
@@ -60,9 +60,9 @@ src/
 
 Методы:
 
-- `handleResponse(response: Response): Promise<object>`
-- `get(uri: string): Promise<any>`
-- `post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<any>`
+- `handleResponse(response: Response): Promise<object>` - обработка ответа, парсинг JSON
+- `get(uri: string): Promise<any>` - GET-запрос
+- `post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<any>` — запрос с телом
 
 ### EventEmitter
 
@@ -70,18 +70,26 @@ src/
 
 Методы:
 
-- `on(event: string, listener: Function)`
-- `off(event: string, listener: Function)`
-- `emit(event: string, ...args: any[])`
-- `onAll(listener: Function)`
-- `offAll(listener: Function)`
-- `trigger(event: string, ...args: any[])`
+- `on(event: string, listener: Function)` — подписка
+- `off(event: string, listener: Function)` — отписка
+- `emit(event: string, ...args: any[])` — вызов обработчиков
+- `onAll(listener: Function)` - подписка на все события
+- `offAll(listener: Function)` - сброс всех подсчиков
+- `trigger(event: string, ...args: any[])` - — возвращает функцию для вызова события
 
 ---
 
 ## Описание моделей
 
-- **ApiModel** — работа с сервером (получение товаров, отправка заказов)
+**ApiModel** — работа с сервером (получение товаров, отправка заказов)
+
+```ts
+constructor(cdn: string, baseUrl: string, options?: RequestInit)
+
+```
+
+-**cdn** — базовый URL для картинок
+
 - **BasketModel** — хранит товары корзины, подсчитывает количество и сумму
 - **DataModel** — хранит текущую выбранную карточку товара
 - **FormModel** — хранит и валидирует данные пользователя (адрес, контактные данные, заказ)
