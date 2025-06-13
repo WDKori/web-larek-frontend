@@ -49,6 +49,15 @@ src/
 
 Работает с API: отправляет запросы и обрабатывает ответы.
 
+**Конструктор:**
+
+```ts
+-`constructor(baseUrl: string, options: RequestInit)`;
+```
+
+- `baseUrl: string` - базовый URL API
+- `options` - астройки запросов (заголовки и пр.)
+
 Методы:
 
 - `handleResponse(response: Response): Promise<object>`
