@@ -92,11 +92,15 @@ constructor(cdn: string, baseUrl: string, options?: RequestInit)
 - **baseUrl** — URL API
 - **options** — настройки запросов
 
-**Методы:** -`getListProductCard(): Promise<IProductItem[]>` — получение списка товаров  
+**Методы:**
+
+-`getListProductCard(): Promise<IProductItem[]>` — получение списка товаров  
 -`postOrderLot(order: IOrderLot): Promise<IOrderResult>` — отправка заказа
 
 **BasketModel** — хранит товары корзины, подсчитывает количество и сумму
+
 **DataModel** — хранит текущую выбранную карточку товара
+
 **FormModel** — хранит и валидирует данные пользователя (адрес, контактные данные, заказ)
 
 ---
