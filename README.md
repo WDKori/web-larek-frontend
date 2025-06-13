@@ -88,7 +88,7 @@ constructor(cdn: string, baseUrl: string, options?: RequestInit)
 
 ```
 
--**cdn** — базовый URL для картинок
+- **cdn**— базовый URL для картинок
 
 - **BasketModel** — хранит товары корзины, подсчитывает количество и сумму
 - **DataModel** — хранит текущую выбранную карточку товара
