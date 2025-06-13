@@ -33,7 +33,6 @@ export class FormModel implements IFormModel {
 		this.items = [];
 	}
 
-	// принимаем значение строки "address"
 	setOrderAddress(field: string, value: string) {
 		if (field === 'address') {
 			this.address = value;
@@ -44,7 +43,6 @@ export class FormModel implements IFormModel {
 		}
 	}
 
-	// валидация данных строки "address"
 	validateOrder() {
 		const regexp = /^[а-яА-ЯёЁa-zA-Z0-9\s\/.,-]{7,}$/;
 		const errors: typeof this.formErrors = {};

@@ -25,7 +25,6 @@ export class Modal implements IModal {
 			.addEventListener('click', (event) => event.stopPropagation());
 	}
 
-	// принимает элемент разметки которая будет отображаться в "modal__content" модального окна
 	set content(value: HTMLElement) {
 		this._content.replaceChildren(value);
 	}
@@ -39,7 +38,7 @@ export class Modal implements IModal {
 	// закрытие модального окна
 	close() {
 		this.modalContainer.classList.remove('modal_active');
-		this.content = null; // очистка контента в модальном окне
+		this.content = null;
 		this.events.emit('modal:close');
 	}
 

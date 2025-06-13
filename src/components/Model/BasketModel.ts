@@ -10,7 +10,7 @@ export interface IBasketModel {
 }
 
 export class BasketModel implements IBasketModel {
-	protected _basketProducts: IProductItem[]; // список карточек товара в корзине
+	protected _basketProducts: IProductItem[];
 
 	constructor() {
 		this._basketProducts = [];
