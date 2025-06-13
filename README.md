@@ -52,7 +52,7 @@ src/
 **Конструктор:**
 
 ```ts
--constructor(baseUrl: string, options: RequestInit);
+constructor(baseUrl: string, options: RequestInit);
 ```
 
 - `baseUrl: string` - базовый URL API
@@ -68,7 +68,16 @@ src/
 
 Реализует паттерн "Observer" — управление событиями.
 
-Методы:
+**Конструктор:**
+
+```ts
+constructor();
+```
+
+Создаёт новый экземпляр брокера событий EventEmitter.
+Конструктор не принимает параметров.
+
+**Методы:**
 
 - `on(event: string, listener: Function)` — подписка
 - `off(event: string, listener: Function)` — отписка
