@@ -81,7 +81,7 @@ src/
 
 ## Описание моделей
 
-## ApiModel — работа с сервером (получение товаров, отправка заказов)
+### ApiModel — работа с сервером (получение товаров, отправка заказов)
 
 ```ts
 constructor(cdn: string, baseUrl: string, options?: RequestInit)
@@ -97,7 +97,7 @@ constructor(cdn: string, baseUrl: string, options?: RequestInit)
 -`getListProductCard(): Promise<IProductItem[]>` — получение списка товаров  
 -`postOrderLot(order: IOrderLot): Promise<IOrderResult>` — отправка заказа
 
-## BasketModel — хранит товары корзины, подсчитывает количество и сумму
+### BasketModel — хранит товары корзины, подсчитывает количество и сумму
 
 **DataModel** — хранит текущую выбранную карточку товара
 
