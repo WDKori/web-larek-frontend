@@ -43,7 +43,7 @@ src/
 
 ---
 
-## Описание базовых классов
+## Модели данных
 
 ### Api
 
@@ -52,7 +52,7 @@ src/
 **Конструктор:**
 
 ```ts
-constructor(baseUrl: string, options: RequestInit);
+constructor(baseUrl: string, options?: RequestInit);
 ```
 
 - `baseUrl: string` - базовый URL API
@@ -90,83 +90,288 @@ constructor();
 
 ## Описание моделей
 
-### ApiModel — работа с сервером (получение товаров, отправка заказов)
+### Api
 
-```ts
-constructor(cdn: string, baseUrl: string, options?: RequestInit)
+Работает с API: отправляет запросы и обрабатывает ответы.
 
+```typescript
+interface IApiModel {
+	// Конфигурация
+	cdn: string; // Базовый URL для изображений
+	items: IProductItem[]; // Кэшированные товары
+
+	// Основные методы
+	getListProductCard(): Promise<IProductItem[]>; // Загрузка товаров
+	postOrderLot(order: IOrderLot): Promise<IOrderResult>; // Отправка заказа
+}
 ```
 
-- **cdn** — базовый URL для картинок
-- **baseUrl** — URL API
-- **options** — настройки запросов
+**Конструктор:**
 
-**Методы:**
+```ts
+constructor(cdn: string, baseUrl: string, options?: RequestInit);
+```
 
--`getListProductCard(): Promise<IProductItem[]>` — получение списка товаров  
--`postOrderLot(order: IOrderLot): Promise<IOrderResult>` — отправка заказа
+- `baseUrl: string` - базовый URL API
+- `options` - астройки запросов (заголовки и пр.)
+
+Методы:
+
+- `getListProductCard()`
+
+```typescript
+/**
+ * Загружает список товаров с сервера
+ * @returns Promise с массивом товаров, где:
+ * - image: автоматически дополняется CDN-путем
+ * - price: может быть null (бесплатные товары)
+ * @throws APIError при неудачном запросе
+ */
+```
+
+- `postOrderLot()`
+
+```typescript
+/**
+ * Отправляет данные заказа
+ * @param order - Объект заказа типа IOrderLot:
+ * {
+ *   payment: 'online' | 'offline',
+ *   email: 'user@example.com',
+ *   phone: '+79991234567',
+ *   address: 'ул. Примерная, 1',
+ *   items: ['prod_1', 'prod_2'],
+ *   total: 2000
+ * }
+ * @returns Promise с результатом:
+ * { id: 'order_123', total: 2000 }
+ * @throws ValidationError при неверных данных
+ */
+```
 
 ### BasketModel — хранит товары корзины, подсчитывает количество и сумму
 
-**Методы:**
+```typescript
+interface IBasketModel {
+	// Состояние
+	basketProducts: IProductItem[]; // Текущие товары в корзине
 
--`getCounter` - возвращает количество товаров -`getSumAllProducts` - считает и возвращает итоговую сумму синапсов -`setSelectedСard` - добавляет товар -`deleteCardToBasket` - удаляет товар -`clearBasketProducts` - очищает корзину
+	// Методы управления
+	getCounter(): number; // Возвращает количество товаров
+	getSumAllProducts(): number; // Сумма всех товаров
+	setSelectedСard(item: IProductItem): void; // Добавление товара
+	deleteCardToBasket(item: IProductItem): void; // Удаление товара
+	clearBasketProducts(): void; // Очистка корзины
+}
+```
 
 ### DataModel — хранит текущую выбранную карточку товара
 
-**Методы:**
+```typescript
+interface IDataModel {
+	products: IProductItem[]; // Все доступные товары
+	selectedProduct: IProductItem | null; // Выбранный товар
 
--`setPreview` - получает данные карточки, открытой пользователем
+	previewProduct(item: IProductItem): void; // Установка товара для предпросмотра
+}
+```
 
 ### FormModel — хранит и валидирует данные пользователя (адрес, контактные данные, заказ)
 
 **Методы:**
 
--`setOrderAddress` - принимает и сохраняет адрес пользователя -`validateOrder` - валидирует адрес пользователя и способ оплаты -`setOrderData` - принимаем и сохраняем телефон и почту пользователя -`validateContacts` - валидирует телефон и почту пользователя -`getOrderLot` - возвращает обьект данных пользователя с товарами, которые он выбрал
+```typescript
+export interface IFormModel {
+	payment: string;
+	email: string;
+	phone: string;
+	address: string;
+	total: number;
+	items: string[];
+	setOrderAddress(field: string, value: string): void; // принимает и сохраняет адрес пользователя
+	validateOrder(): boolean; // валидирует адрес пользователя и способ оплаты
+	setOrderData(field: string, value: string): void; // принимаем и сохраняем телефон и почту пользователя
+	validateContacts(): boolean; // валидирует телефон и почту пользователя
+	getOrderLot(): object; // возвращает обьект данных пользователя с товарами, которые он выбрал
+}
+```
 
 ---
 
 ## Описание представлений (View)
 
+### Page - главная страница
+
+```typescript
+interface IPage {
+	// Элементы управления
+	updateBasketCounter(count: number): void; // Обновление счетчика
+
+	// Рендеринг
+	renderProducts(products: IProductItem[]): void; // Отображение товаров
+}
+```
+
 ### Basket— отображение корзины и количества товаров
 
 **Методы:**
 
--`renderHeaderBasketCounter` - сохраняет и устанавливает количество товаров -`renderSumAllProducts` - сохраняет и устанавливает итоговую сумму синапсов в корзине
+```typescript
+interface IBasket {
+	// Управление состоянием
+	setItems(items: HTMLElement[]): void; // Установка элементов корзины
+	setTotal(sum: number): void; // Установка общей суммы
+
+	// Рендеринг
+	render(): HTMLElement; // Генерация DOM-структуры
+}
+```
 
 ### BasketItem — отображение товара в корзине
 
-**Методы:**
+```typescript
+interface IBasketItem {
+	// Свойства
+	index: number; // Позиция в корзине (1-based)
+	title: string; // Название товара
+	price: number | null; // Цена ("Бесценно" при null)
 
--`setPrice` - принимает цену товаров и возвращает строкой
+	// Методы
+	render(): HTMLElement; // Генерация DOM-элемента
+}
+```
 
-### Card — отображение карточки товара
+### Card (Базовая карточка товара)
 
-**Методы:**
+```typescript
+/**
+ * Базовый компонент карточки товара для каталога
+ * Отвечает за:
+ * - Отображение основной информации о товаре
+ * - Стилизацию по категории
+ * - Обработку кликов
+ */
+interface ICard {
+	/**
+	 * Устанавливает категорию товара с автоматическим применением стилей
+	 * @param value - Название категории: 'софт-скил', 'хард-скил', etc.
+	 * Добавляет CSS-класс формата `card__category_${category}`
+	 */
+	setCategory(value: string): void;
 
--`setText` - принимает HTMLElement и value -`cardCategory` - принимает строчное значение и создает новый className для HTMLElement -`setPrice` - принимает цену товаров и возвращает строкой
+	/**
+	 * Устанавливает изображение товара
+	 * @param src - URL изображения (уже содержит CDN-префикс)
+	 * @param alt - Альтернативный текст на основе title
+	 */
+	setImage(src: string, alt: string): void;
 
-### CardPreview — подробное отображение карточки с возможностью добавить в корзину
+	/**
+	 * Форматирует цену с учетом null-значения
+	 * @param value - Число (цена) или null ("Бесценно")
+	 * Автоматически добавляет " синапсов" к числовым значениям
+	 */
+	setPrice(value: number | null): void;
+}
+```
 
-**Методы:**
+### CardPreview (Расширенная карточка)
 
--`notSale` - принимает данные о продукте, при отсутсвии цены запрещает покупку
+```typescript
+/**
+ * Карточка для детального просмотра товара (наследует Card)
+ * Добавляет:
+ * - Полное описание товара
+ * - Интерактивную кнопку "В корзину"
+ * - Контроль состояния кнопки
+ */
+interface ICardPreview extends ICard {
+	/**
+	 * Устанавливает развернутое описание товара
+	 * @param value - Текст описания (может содержать HTML)
+	 */
+	setDescription(value: string): void;
 
-### Order — модальное окно для выбора оплаты и адреса доставки
+	/**
+	 * Управляет состоянием кнопки добавления
+	 * @param isInBasket - Уже в корзине?
+	 * @param hasPrice - Доступен для покупки?
+	 * Автоматически меняет текст и блокирует кнопку при необходимости
+	 */
+	setButtonState(isInBasket: boolean, hasPrice: boolean): void;
+}
+```
 
-**Методы:**
+**Ключевые отличия от Card:**
 
--`paymentSelection` - кастомизируем выбранный способ оплаты
+```typescript
+// Переопределенный метод render
+render(data: IProductItem, basketItems: IProductItem[] = []): HTMLElement {
+  super.render(data); // Используем базовый рендер
+  this.setDescription(data.description);
 
-### Contacts — модальное окно для ввода контактов пользователя
+  // Проверяем наличие в корзине
+  const inBasket = basketItems.some(item => item.id === data.id);
+  this.setButtonState(inBasket, data.price !== null);
 
-### Modal — общий класс для модальных окон
+  return this._element;
+}
+```
 
-**Методы:**
+### Формы — модальные окна для выбора оплаты, адреса доставки, ввода контактов пользователя
 
--`open` - открытие модального окна -`close` - закрытие модального окна
+**FormOrder**
 
-### Success — отображение сообщения об успешном заказе
+```typescript
+interface IFormOrder {
+	// Сеттеры
+	payment: string; // 'online' | 'offline'
+	address: string;
+	valid: boolean; // Статус валидации
+	error: string; // Текст ошибки
+
+	render(): HTMLFormElement;
+}
+```
+
+**FormContacts**
+
+```typescript
+interface IFormContacts {
+	// Сеттеры
+	email: string;
+	phone: string;
+	valid: boolean;
+	error: string;
+
+	render(): HTMLFormElement;
+}
+```
+
+### Системные компоненты
+
+**Modal**
+
+```typescript
+interface IModal {
+	// Управление
+	open(content?: HTMLElement): void; // Открытие с контентом
+	close(): void;
+
+	// Состояние
+	locked: boolean; // Блокировка прокрутки
+	content: HTMLElement | null; // Текущий контент
+}
+```
+
+**Success**
+
+```typescript
+interface ISuccess {
+	total: number; // Сумма заказа
+	render(): HTMLElement;
+}
+```
 
 ---
 

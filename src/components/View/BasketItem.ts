@@ -1,51 +1,55 @@
-import { IActions, IProductItem } from '../../types';
 import { IEvents } from '../base/events';
+import { IProductItem } from '../../types';
 
 export interface IBasketItem {
-	basketItem: HTMLElement;
-	index: HTMLElement;
-	title: HTMLElement;
-	price: HTMLElement;
-	buttonDelete: HTMLButtonElement;
-	render(data: IProductItem, item: number): HTMLElement;
+	index: number;
+	title: string;
+	price: number | null;
+	render(): HTMLElement;
 }
 
 export class BasketItem implements IBasketItem {
-	basketItem: HTMLElement;
-	index: HTMLElement;
-	title: HTMLElement;
-	price: HTMLElement;
-	buttonDelete: HTMLButtonElement;
+	protected _container: HTMLElement;
+	protected _indexElement: HTMLElement;
+	protected _titleElement: HTMLElement;
+	protected _priceElement: HTMLElement;
+	protected _deleteButton: HTMLButtonElement;
 
 	constructor(
 		template: HTMLTemplateElement,
 		protected events: IEvents,
-		actions?: IActions
+		protected item: IProductItem, // Принимаем продукт напрямую
+		protected onRemove?: () => void // Добавляем опциональный callback
 	) {
-		this.basketItem = template.content
+		this._container = template.content
 			.querySelector('.basket__item')
 			.cloneNode(true) as HTMLElement;
-		this.index = this.basketItem.querySelector('.basket__item-index');
-		this.title = this.basketItem.querySelector('.card__title');
-		this.price = this.basketItem.querySelector('.card__price');
-		this.buttonDelete = this.basketItem.querySelector('.basket__item-delete');
+		this._indexElement = this._container.querySelector('.basket__item-index');
+		this._titleElement = this._container.querySelector('.card__title');
+		this._priceElement = this._container.querySelector('.card__price');
+		this._deleteButton = this._container.querySelector('.basket__item-delete');
 
-		if (actions?.onClick) {
-			this.buttonDelete.addEventListener('click', actions.onClick);
-		}
+		this._deleteButton.addEventListener('click', () => {
+			if (this.onRemove) this.onRemove();
+		});
 	}
 
-	protected setPrice(value: number | null) {
-		if (value === null) {
-			return 'Бесценно';
-		}
-		return String(value) + ' синапсов';
+	set index(value: number) {
+		this._indexElement.textContent = String(value);
 	}
 
-	render(data: IProductItem, item: number) {
-		this.index.textContent = String(item);
-		this.title.textContent = data.title;
-		this.price.textContent = this.setPrice(data.price);
-		return this.basketItem;
+	set title(value: string) {
+		this._titleElement.textContent = value;
+	}
+
+	set price(value: number | null) {
+		this._priceElement.textContent =
+			value === null ? 'Бесценно' : `${value} синапсов`;
+	}
+
+	render(): HTMLElement {
+		this.title = this.item.title;
+		this.price = this.item.price;
+		return this._container;
 	}
 }

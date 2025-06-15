@@ -1,58 +1,89 @@
 import { IEvents } from '../base/events';
+import { IOrderForm } from '../../types';
+import { FormModel } from '../Model/FormModel';
 
-export interface IOrder {
-	formOrder: HTMLFormElement;
-	buttonAll: HTMLButtonElement[];
-	paymentSelection: String;
-	formErrors: HTMLElement;
-	render(): HTMLElement;
+export interface IFormOrder {
+	payment: string;
+	address: string;
+	valid: boolean;
+	render(): HTMLFormElement;
+	clear(): void;
 }
 
-export class Order implements IOrder {
-	formOrder: HTMLFormElement;
-	buttonAll: HTMLButtonElement[];
-	buttonSubmit: HTMLButtonElement;
-	formErrors: HTMLElement;
+export class FormOrder implements IFormOrder {
+	protected _form: HTMLFormElement;
+	protected _buttons: HTMLButtonElement[];
+	protected _submitButton: HTMLButtonElement;
+	protected _errorElement: HTMLElement;
 
-	constructor(template: HTMLTemplateElement, protected events: IEvents) {
-		this.formOrder = template.content
+	constructor(
+		template: HTMLTemplateElement,
+		protected events: IEvents,
+		protected formModel: FormModel
+	) {
+		this._form = template.content
 			.querySelector('.form')
 			.cloneNode(true) as HTMLFormElement;
-		this.buttonAll = Array.from(this.formOrder.querySelectorAll('.button_alt'));
-		this.buttonSubmit = this.formOrder.querySelector('.order__button');
-		this.formErrors = this.formOrder.querySelector('.form__errors');
+		this._buttons = Array.from(this._form.querySelectorAll('.button_alt'));
+		this._submitButton = this._form.querySelector('.order__button');
+		this._errorElement = this._form.querySelector('.form__errors');
 
-		this.buttonAll.forEach((item) => {
-			item.addEventListener('click', () => {
-				this.paymentSelection = item.name;
-				events.emit('order:paymentSelection', item);
+		this._buttons.forEach((button) => {
+			button.addEventListener('click', () => {
+				const payment = button.name; // Получаем значение
+
+				this.payment = payment; // Сохраняем в форме
+				events.emit('order:payment:changed', {
+					payment: payment, // Явно передаём значение
+					forceValidate: true,
+				});
 			});
 		});
 
-		this.formOrder.addEventListener('input', (event: Event) => {
-			const target = event.target as HTMLInputElement;
-			const field = target.name;
-			const value = target.value;
-			this.events.emit(`order:changeAddress`, { field, value });
+		this._form.addEventListener('submit', (e) => {
+			e.preventDefault();
+			if (this.formModel.validateOrder()) {
+				events.emit('order:submit');
+			}
 		});
 
-		this.formOrder.addEventListener('submit', (event: Event) => {
-			event.preventDefault();
-			this.events.emit('contacts:open');
+		this._form.addEventListener('input', (e) => {
+			const target = e.target as HTMLInputElement;
+			const field = target.name as keyof IOrderForm;
+			events.emit('order:input', {
+				field,
+				value: target.value,
+				validate: true,
+			});
 		});
 	}
 
-	set paymentSelection(paymentMethod: string) {
-		this.buttonAll.forEach((item) => {
-			item.classList.toggle('button_alt-active', item.name === paymentMethod);
+	set payment(value: string) {
+		this._buttons.forEach((button) => {
+			button.classList.toggle('button_alt-active', button.name === value);
 		});
+	}
+
+	set address(value: string) {
+		(this._form.elements.namedItem('address') as HTMLInputElement).value =
+			value;
 	}
 
 	set valid(value: boolean) {
-		this.buttonSubmit.disabled = !value;
+		this._submitButton.disabled = !value;
 	}
 
-	render() {
-		return this.formOrder;
+	set error(value: string) {
+		this._errorElement.textContent = value;
+	}
+
+	render(): HTMLFormElement {
+		return this._form;
+	}
+
+	clear(): void {
+		this._form.reset();
+		this.payment = '';
+		this.error = '';
 	}
 }

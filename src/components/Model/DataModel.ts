@@ -2,30 +2,32 @@ import { IProductItem } from '../../types';
 import { IEvents } from '../base/events';
 
 export interface IDataModel {
-	productCards: IProductItem[];
-	selectedСard: IProductItem;
-	setPreview(item: IProductItem): void;
+	products: IProductItem[];
+	selectedProduct: IProductItem | null;
+	previewProduct(item: IProductItem): void;
 }
 
 export class DataModel implements IDataModel {
-	protected _productCards: IProductItem[];
-	selectedСard: IProductItem;
+	protected _products: IProductItem[] = [];
+	protected _selectedProduct: IProductItem | null = null;
 
-	constructor(protected events: IEvents) {
-		this._productCards = [];
+	constructor(protected events: IEvents) {}
+
+	set products(items: IProductItem[]) {
+		this._products = items;
+		this.events.emit('products:changed');
 	}
 
-	set productCards(data: IProductItem[]) {
-		this._productCards = data;
-		this.events.emit('productCards:receive');
+	get products(): IProductItem[] {
+		return this._products;
 	}
 
-	get productCards() {
-		return this._productCards;
+	get selectedProduct(): IProductItem | null {
+		return this._selectedProduct;
 	}
 
-	setPreview(item: IProductItem) {
-		this.selectedСard = item;
-		this.events.emit('modalCard:open', item);
+	previewProduct(item: IProductItem): void {
+		this._selectedProduct = item;
+		this.events.emit('product:preview', item);
 	}
 }

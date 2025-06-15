@@ -1,58 +1,56 @@
 import { IEvents } from '../base/events';
 
 export interface IModal {
-	open(): void;
+	content: HTMLElement | null;
+	locked: boolean;
+	open(content?: HTMLElement): void;
 	close(): void;
 	render(): HTMLElement;
 }
 
 export class Modal implements IModal {
-	protected modalContainer: HTMLElement;
-	protected closeButton: HTMLButtonElement;
 	protected _content: HTMLElement;
 	protected _pageWrapper: HTMLElement;
+	protected _closeButton: HTMLButtonElement;
 
-	constructor(modalContainer: HTMLElement, protected events: IEvents) {
-		this.modalContainer = modalContainer;
-		this.closeButton = modalContainer.querySelector('.modal__close');
-		this._content = modalContainer.querySelector('.modal__content');
+	constructor(protected container: HTMLElement, protected events: IEvents) {
+		this._content = container.querySelector('.modal__content');
 		this._pageWrapper = document.querySelector('.page__wrapper');
+		this._closeButton = container.querySelector('.modal__close');
 
-		this.closeButton.addEventListener('click', this.close.bind(this));
-		this.modalContainer.addEventListener('click', this.close.bind(this));
-		this.modalContainer
+		this._closeButton.addEventListener('click', this.close.bind(this));
+		this.container.addEventListener('click', this.close.bind(this));
+		this.container
 			.querySelector('.modal__container')
-			.addEventListener('click', (event) => event.stopPropagation());
+			.addEventListener('click', (e) => e.stopPropagation());
 	}
 
-	set content(value: HTMLElement) {
-		this._content.replaceChildren(value);
+	set content(value: HTMLElement | null) {
+		this._content.replaceChildren(value || '');
 	}
 
-	// открытие модального окна
-	open() {
-		this.modalContainer.classList.add('modal_active');
+	get content(): HTMLElement | null {
+		return this._content;
+	}
+
+	set locked(value: boolean) {
+		this._pageWrapper.classList.toggle('page__wrapper_locked', value);
+	}
+
+	open(content?: HTMLElement): void {
+		if (content) this.content = content;
+
+		this.container.classList.add('modal_active');
 		this.events.emit('modal:open');
 	}
 
-	// закрытие модального окна
-	close() {
-		this.modalContainer.classList.remove('modal_active');
+	close(): void {
+		this.container.classList.remove('modal_active');
 		this.content = null;
 		this.events.emit('modal:close');
 	}
 
-	set locked(value: boolean) {
-		if (value) {
-			this._pageWrapper.classList.add('page__wrapper_locked');
-		} else {
-			this._pageWrapper.classList.remove('page__wrapper_locked');
-		}
-	}
-
 	render(): HTMLElement {
-		this._content;
-		this.open();
-		return this.modalContainer;
+		return this.container;
 	}
 }

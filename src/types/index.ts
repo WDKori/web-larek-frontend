@@ -8,7 +8,7 @@ export interface IProductItem {
 }
 
 export interface IActions {
-	onClick: (event: MouseEvent) => void;
+	onClick?: (event: MouseEvent) => void;
 }
 
 // интерфейс формы заказа

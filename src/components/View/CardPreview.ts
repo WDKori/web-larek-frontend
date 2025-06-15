@@ -1,16 +1,15 @@
-import { Card } from './Card';
+import { Card, ICard } from './Card';
 import { IActions, IProductItem } from '../../types';
 import { IEvents } from '../base/events';
 
-export interface ICard {
-	text: HTMLElement;
-	button: HTMLElement;
-	render(data: IProductItem): HTMLElement;
+export interface ICardPreview extends ICard {
+	setDescription(value: string): void;
+	setButtonState(isInBasket: boolean, hasPrice: boolean): void;
 }
 
-export class CardPreview extends Card implements ICard {
-	text: HTMLElement;
-	button: HTMLElement;
+export class CardPreview extends Card implements ICardPreview {
+	protected _description: HTMLElement;
+	protected _button: HTMLButtonElement;
 
 	constructor(
 		template: HTMLTemplateElement,
@@ -18,44 +17,36 @@ export class CardPreview extends Card implements ICard {
 		actions?: IActions
 	) {
 		super(template, events, actions);
-		this.text = this._cardElement.querySelector('.card__text');
-		this.button = this._cardElement.querySelector('.card__button');
-		this.button.addEventListener('click', () => {
+		this._description = this._cardElement.querySelector('.card__text');
+		this._button = this._cardElement.querySelector('.card__button');
+
+		this._button.addEventListener('click', () => {
 			this.events.emit('card:addBasket');
 		});
 	}
 
-	notSale(data: IProductItem) {
-		if (data.price) {
-			return 'Купить';
+	setDescription(value: string): void {
+		this._description.textContent = value;
+	}
+
+	setButtonState(isInBasket: boolean, hasPrice: boolean): void {
+		if (!hasPrice) {
+			this._button.textContent = 'Не продается';
+			this._button.disabled = true;
+		} else if (isInBasket) {
+			this._button.textContent = 'Уже в корзине';
+			this._button.disabled = true;
 		} else {
-			this.button.setAttribute('disabled', 'true');
-			return 'Не продается';
+			this._button.textContent = 'Купить';
+			this._button.disabled = false;
 		}
 	}
 
 	render(data: IProductItem, basketItems: IProductItem[] = []): HTMLElement {
-		this._cardCategory.textContent = data.category;
-		this.cardCategory = data.category;
-		this._cardTitle.textContent = data.title;
-		this._cardImage.src = data.image;
-		this._cardImage.alt = this._cardTitle.textContent;
-		this._cardPrice.textContent = this.setPrice(data.price);
-		this.text.textContent = data.description;
-
+		super.render(data);
+		this.setDescription(data.description);
 		const inBasket = basketItems.some((item) => item.id === data.id);
-
-		if (!data.price) {
-			this.button.textContent = 'Не продается';
-			this.button.setAttribute('disabled', 'true');
-		} else if (inBasket) {
-			this.button.textContent = 'Уже в корзине';
-			this.button.setAttribute('disabled', 'true');
-		} else {
-			this.button.textContent = 'Купить';
-			this.button.removeAttribute('disabled');
-		}
-
+		this.setButtonState(inBasket, data.price !== null);
 		return this._cardElement;
 	}
 }

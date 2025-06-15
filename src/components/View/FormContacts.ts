@@ -1,49 +1,68 @@
 import { IEvents } from '../base/events';
+import { IOrderForm } from '../../types';
+import { FormModel } from '../Model/FormModel';
 
-export interface IContacts {
-	formContacts: HTMLFormElement;
-	inputAll: HTMLInputElement[];
-	buttonSubmit: HTMLButtonElement;
-	formErrors: HTMLElement;
-	render(): HTMLElement;
+export interface IFormContacts {
+	email: string;
+	phone: string;
+	valid: boolean;
+	render(): HTMLFormElement;
+	clear(): void;
 }
 
-export class Contacts implements IContacts {
-	formContacts: HTMLFormElement;
-	inputAll: HTMLInputElement[];
-	buttonSubmit: HTMLButtonElement;
-	formErrors: HTMLElement;
+export class FormContacts implements IFormContacts {
+	protected _form: HTMLFormElement;
+	protected _submitButton: HTMLButtonElement;
+	protected _errorElement: HTMLElement;
 
-	constructor(template: HTMLTemplateElement, protected events: IEvents) {
-		this.formContacts = template.content
+	constructor(
+		template: HTMLTemplateElement,
+		protected events: IEvents,
+		protected formModel: FormModel
+	) {
+		this._form = template.content
 			.querySelector('.form')
 			.cloneNode(true) as HTMLFormElement;
-		this.inputAll = Array.from(
-			this.formContacts.querySelectorAll('.form__input')
-		);
-		this.buttonSubmit = this.formContacts.querySelector('.button');
-		this.formErrors = this.formContacts.querySelector('.form__errors');
+		this._submitButton = this._form.querySelector('.button');
+		this._errorElement = this._form.querySelector('.form__errors');
 
-		this.inputAll.forEach((item) => {
-			item.addEventListener('input', (event) => {
-				const target = event.target as HTMLInputElement;
-				const field = target.name;
-				const value = target.value;
-				this.events.emit(`contacts:changeInput`, { field, value });
-			});
+		this._form.addEventListener('submit', (e) => {
+			e.preventDefault();
+
+			if (this.formModel.validateContacts()) {
+				this.events.emit('order:complete');
+			}
 		});
 
-		this.formContacts.addEventListener('submit', (event: Event) => {
-			event.preventDefault();
-			this.events.emit('success:open');
+		this._form.addEventListener('input', (e) => {
+			const target = e.target as HTMLInputElement;
+			const field = target.name as keyof IOrderForm;
+			events.emit('contacts:input', { field, value: target.value });
 		});
+	}
+
+	set email(value: string) {
+		(this._form.elements.namedItem('email') as HTMLInputElement).value = value;
+	}
+
+	set phone(value: string) {
+		(this._form.elements.namedItem('phone') as HTMLInputElement).value = value;
 	}
 
 	set valid(value: boolean) {
-		this.buttonSubmit.disabled = !value;
+		this._submitButton.disabled = !value;
 	}
 
-	render() {
-		return this.formContacts;
+	set error(value: string) {
+		this._errorElement.textContent = value;
+	}
+
+	render(): HTMLFormElement {
+		return this._form;
+	}
+
+	clear(): void {
+		this._form.reset();
+		this.error = '';
 	}
 }

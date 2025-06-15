@@ -43,7 +43,7 @@ export class FormModel implements IFormModel {
 		}
 	}
 
-	validateOrder() {
+	public validateOrder(): boolean {
 		const regexp = /^[а-яА-ЯёЁa-zA-Z0-9\s\/.,-]{7,}$/;
 		const errors: typeof this.formErrors = {};
 
@@ -98,6 +98,12 @@ export class FormModel implements IFormModel {
 		this.formErrors = errors;
 		this.events.emit('formErrors:change', this.formErrors);
 		return Object.keys(errors).length === 0;
+	}
+
+	updateOrderValidation() {
+		const isValid = this.validateOrder();
+		this.events.emit('order:validation', { valid: isValid });
+		return isValid;
 	}
 
 	getOrderLot() {

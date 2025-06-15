@@ -2,7 +2,11 @@ import { IActions, IProductItem } from '../../types';
 import { IEvents } from '../base/events';
 
 export interface ICard {
-	render(data: IProductItem): HTMLElement;
+	setCategory(value: string): void;
+	setTitle(value: string): void;
+	setImage(src: string, alt: string): void;
+	setPrice(value: number | null): void;
+	render(data: IProductItem, basketItems?: IProductItem[]): HTMLElement;
 }
 
 export class Card implements ICard {
@@ -11,13 +15,6 @@ export class Card implements ICard {
 	protected _cardTitle: HTMLElement;
 	protected _cardImage: HTMLImageElement;
 	protected _cardPrice: HTMLElement;
-	protected _colors = <Record<string, string>>{
-		дополнительное: 'additional',
-		'софт-скил': 'soft',
-		кнопка: 'button',
-		'хард-скил': 'hard',
-		другое: 'other',
-	};
 
 	constructor(
 		template: HTMLTemplateElement,
@@ -37,31 +34,30 @@ export class Card implements ICard {
 		}
 	}
 
-	protected setText(element: HTMLElement, value: unknown): string {
-		if (element) {
-			return (element.textContent = String(value));
-		}
+	setCategory(value: string): void {
+		this._cardCategory.textContent = value;
+		// Здесь может быть дополнительная логика для стилей категории
 	}
 
-	set cardCategory(value: string) {
-		this.setText(this._cardCategory, value);
-		this._cardCategory.className = `card__category card__category_${this._colors[value]}`;
+	setTitle(value: string): void {
+		this._cardTitle.textContent = value;
 	}
 
-	protected setPrice(value: number | null): string {
-		if (value === null) {
-			return 'Бесценно';
-		}
-		return String(value) + ' синапсов';
+	setImage(src: string, alt: string): void {
+		this._cardImage.src = src;
+		this._cardImage.alt = alt;
+	}
+
+	setPrice(value: number | null): void {
+		this._cardPrice.textContent =
+			value === null ? 'Бесценно' : `${value} синапсов`;
 	}
 
 	render(data: IProductItem): HTMLElement {
-		this._cardCategory.textContent = data.category;
-		this.cardCategory = data.category;
-		this._cardTitle.textContent = data.title;
-		this._cardImage.src = data.image;
-		this._cardImage.alt = this._cardTitle.textContent;
-		this._cardPrice.textContent = this.setPrice(data.price);
+		this.setCategory(data.category);
+		this.setTitle(data.title);
+		this.setImage(data.image, data.title);
+		this.setPrice(data.price);
 		return this._cardElement;
 	}
 }

@@ -19,12 +19,12 @@ export class ApiModel extends Api {
 
 	// получаем массив объектов(карточек) с сервера
 	getListProductCard(): Promise<IProductItem[]> {
-		return this.get('/product').then((data: ApiListResponse<IProductItem>) =>
-			data.items.map((item) => ({
+		return this.get('/product').then((data: ApiListResponse<IProductItem>) => {
+			return data.items.map((item) => ({
 				...item,
 				image: this.cdn + item.image,
-			}))
-		);
+			}));
+		});
 	}
 
 	// получаем ответ от сервера по сделанному заказу

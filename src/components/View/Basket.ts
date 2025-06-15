@@ -1,16 +1,8 @@
-import { createElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
 
 export interface IBasket {
-	basket: HTMLElement;
-	title: HTMLElement;
-	basketList: HTMLElement;
-	button: HTMLButtonElement;
-	basketPrice: HTMLElement;
-	headerBasketButton: HTMLButtonElement;
-	headerBasketCounter: HTMLElement;
-	renderHeaderBasketCounter(value: number): void;
-	renderSumAllProducts(sumAll: number): void;
+	setItems(items: HTMLElement[]): void; // Изменяем тип параметра
+	setTotal(sum: number): void;
 	render(): HTMLElement;
 }
 
@@ -20,8 +12,6 @@ export class Basket implements IBasket {
 	basketList: HTMLElement;
 	button: HTMLButtonElement;
 	basketPrice: HTMLElement;
-	headerBasketButton: HTMLButtonElement;
-	headerBasketCounter: HTMLElement;
 
 	constructor(template: HTMLTemplateElement, protected events: IEvents) {
 		this.basket = template.content
@@ -31,44 +21,28 @@ export class Basket implements IBasket {
 		this.basketList = this.basket.querySelector('.basket__list');
 		this.button = this.basket.querySelector('.basket__button');
 		this.basketPrice = this.basket.querySelector('.basket__price');
-		this.headerBasketButton = document.querySelector('.header__basket');
-		this.headerBasketCounter = document.querySelector(
-			'.header__basket-counter'
-		);
 
 		this.button.addEventListener('click', () => {
 			this.events.emit('order:open');
 		});
-		this.headerBasketButton.addEventListener('click', () => {
-			this.events.emit('basket:open');
-		});
-
-		this.items = [];
 	}
 
-	set items(items: HTMLElement[]) {
+	setItems(items: HTMLElement[]): void {
+		// Обновляем реализацию
 		if (items.length) {
 			this.basketList.replaceChildren(...items);
-			this.button.removeAttribute('disabled');
+			this.button.disabled = false;
 		} else {
-			this.button.setAttribute('disabled', 'disabled');
-			this.basketList.replaceChildren(
-				createElement<HTMLParagraphElement>('p', {
-					textContent: 'Корзина пуста',
-				})
-			);
+			this.button.disabled = true;
+			this.basketList.innerHTML = '<p>Корзина пуста</p>';
 		}
 	}
 
-	renderHeaderBasketCounter(value: number) {
-		this.headerBasketCounter.textContent = String(value);
+	setTotal(sum: number): void {
+		this.basketPrice.textContent = `${sum} синапсов`;
 	}
 
-	renderSumAllProducts(sumAll: number) {
-		this.basketPrice.textContent = String(sumAll + ' синапсов');
-	}
-
-	render() {
+	render(): HTMLElement {
 		this.title.textContent = 'Корзина';
 		return this.basket;
 	}
