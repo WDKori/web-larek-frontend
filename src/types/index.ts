@@ -13,24 +13,19 @@ export interface IActions {
 
 // интерфейс формы заказа
 export interface IOrderForm {
-	payment?: string;
-	address?: string;
-	phone?: string;
-	email?: string;
-	total?: string | number;
+	payment: string;
+	address: string;
+	phone: string;
+	email: string;
 }
 
 export interface IOrder extends IOrderForm {
 	items: string[];
 }
 
-export interface IOrderLot {
-	payment: string;
-	email: string;
-	phone: string;
-	address: string;
-	total: number;
+export interface IOrderLot extends IOrderForm {
 	items: string[];
+	total: number;
 }
 
 export interface IOrderResult {
@@ -39,4 +34,4 @@ export interface IOrderResult {
 }
 
 // тип ошибки формы
-export type FormErrors = Partial<Record<keyof IOrder, string>>;
+export type FormErrors = Partial<Record<keyof IOrderForm, string>>;

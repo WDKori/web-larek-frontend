@@ -1,25 +1,12 @@
 import { IEvents } from '../base/events';
-import { IOrderForm } from '../../types';
-import { FormModel } from '../Model/FormModel';
+import { IOrderForm, FormErrors } from '../../types';
 
-export interface IFormContacts {
-	email: string;
-	phone: string;
-	valid: boolean;
-	render(): HTMLFormElement;
-	clear(): void;
-}
-
-export class FormContacts implements IFormContacts {
+export class FormContacts {
 	protected _form: HTMLFormElement;
 	protected _submitButton: HTMLButtonElement;
 	protected _errorElement: HTMLElement;
 
-	constructor(
-		template: HTMLTemplateElement,
-		protected events: IEvents,
-		protected formModel: FormModel
-	) {
+	constructor(template: HTMLTemplateElement, protected events: IEvents) {
 		this._form = template.content
 			.querySelector('.form')
 			.cloneNode(true) as HTMLFormElement;
@@ -28,25 +15,20 @@ export class FormContacts implements IFormContacts {
 
 		this._form.addEventListener('submit', (e) => {
 			e.preventDefault();
-
-			if (this.formModel.validateContacts()) {
-				this.events.emit('order:complete');
-			}
+			this.events.emit('contacts:submit');
 		});
 
 		this._form.addEventListener('input', (e) => {
 			const target = e.target as HTMLInputElement;
-			const field = target.name as keyof IOrderForm;
-			events.emit('contacts:input', { field, value: target.value });
+			this.events.emit('contacts:input', {
+				field: target.name as keyof IOrderForm,
+				value: target.value,
+			});
 		});
-	}
 
-	set email(value: string) {
-		(this._form.elements.namedItem('email') as HTMLInputElement).value = value;
-	}
-
-	set phone(value: string) {
-		(this._form.elements.namedItem('phone') as HTMLInputElement).value = value;
+		this.events.on('formErrors:change', (errors: FormErrors) => {
+			this.error = Object.values(errors).join('; ');
+		});
 	}
 
 	set valid(value: boolean) {

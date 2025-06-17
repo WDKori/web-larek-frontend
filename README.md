@@ -186,11 +186,7 @@ export interface IFormModel {
 	email: string;
 	phone: string;
 	address: string;
-	total: number;
-	items: string[];
-	setOrderAddress(field: string, value: string): void; // принимает и сохраняет адрес пользователя
 	validateOrder(): boolean; // валидирует адрес пользователя и способ оплаты
-	setOrderData(field: string, value: string): void; // принимаем и сохраняем телефон и почту пользователя
 	validateContacts(): boolean; // валидирует телефон и почту пользователя
 	getOrderLot(): object; // возвращает обьект данных пользователя с товарами, которые он выбрал
 }
@@ -208,7 +204,11 @@ interface IPage {
 	updateBasketCounter(count: number): void; // Обновление счетчика
 
 	// Рендеринг
-	renderProducts(products: IProductItem[]): void; // Отображение товаров
+	renderProducts(
+		products: IProductItem[],
+		cardTemplate: HTMLTemplateElement,
+		events: IEvents
+	): void; // Отображение товаров, Для каждого товара создает карточку используя шаблон, Добавляет обработчик клика по карточке, Добавляет карточки в DOM
 }
 ```
 
@@ -322,31 +322,45 @@ render(data: IProductItem, basketItems: IProductItem[] = []): HTMLElement {
 
 **FormOrder**
 
-```typescript
-interface IFormOrder {
-	// Сеттеры
-	payment: string; // 'online' | 'offline'
-	address: string;
-	valid: boolean; // Статус валидации
-	error: string; // Текст ошибки
+**Конструктор:**
 
-	render(): HTMLFormElement;
-}
+```ts
+constructor(template: HTMLTemplateElement, protected events: IEvents);
 ```
+
+- `template ` — HTML-шаблон формы заказа, из которого создаётся экземпляр формы.
+- `events ` — экземпляр событийного эмиттера для взаимодействия с моделью и другими частями приложения.а
+
+**Методы:**
+
+- `render(): HTMLFormElement` — Возвращает HTML-элемент формы, готовый к вставке в DOM. Автоматически восстанавливает визуальное состояние (например, выбранный способ оплаты).
+- `clear()` — Сброс формы до исходного состояния
+
+**Сеттеры**
+
+- `valid: boolean` — Управляет доступностью кнопки отправки.
+- `error: string` - Отображает текст ошибки под формой
 
 **FormContacts**
 
-```typescript
-interface IFormContacts {
-	// Сеттеры
-	email: string;
-	phone: string;
-	valid: boolean;
-	error: string;
+**Конструктор:**
 
-	render(): HTMLFormElement;
-}
+```ts
+constructor(template: HTMLTemplateElement, protected events: IEvents);
 ```
+
+- `template ` — HTML-шаблон формы заказа, из которого создаётся экземпляр формы.
+- `events ` — экземпляр событийного эмиттера для взаимодействия с моделью и другими частями приложения.а
+
+**Методы:**
+
+- `render(): HTMLFormElement` — Возвращает HTML-элемент формы, готовый к вставке в DOM. Автоматически восстанавливает визуальное состояние (например, выбранный способ оплаты).
+- `clear()` — Сброс формы до исходного состояния
+
+**Сеттеры**
+
+- `valid: boolean` — Управляет доступностью кнопки отправки.
+- `error: string` - Отображает текст ошибки под формой
 
 ### Системные компоненты
 

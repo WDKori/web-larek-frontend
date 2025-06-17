@@ -1,5 +1,4 @@
 import { IEvents } from '../base/events';
-import { FormModel } from '../Model/FormModel';
 
 export interface ISuccess {
 	total: number;
@@ -11,11 +10,7 @@ export class Success implements ISuccess {
 	protected _description: HTMLElement;
 	protected _closeButton: HTMLButtonElement;
 
-	constructor(
-		template: HTMLTemplateElement,
-		protected events: IEvents,
-		protected formModel: FormModel
-	) {
+	constructor(template: HTMLTemplateElement, protected events: IEvents) {
 		this._container = template.content
 			.querySelector('.order-success')
 			.cloneNode(true) as HTMLElement;

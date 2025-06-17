@@ -6,7 +6,7 @@ import { ApiModel } from './components/Model/ApiModel';
 import { DataModel } from './components/Model/DataModel';
 import { Card } from './components/View/Card';
 import { CardPreview } from './components/View/CardPreview';
-import { IOrderForm, IProductItem } from './types';
+import { IOrderForm, IProductItem, IOrderLot } from './types';
 import { Modal } from './components/View/Modal';
 import { ensureElement } from './utils/utils';
 import { BasketModel } from './components/Model/BasketModel';
@@ -28,7 +28,9 @@ const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 const apiModel = new ApiModel(CDN_URL, API_URL);
+
 const events = new EventEmitter();
+const page = new Page(events);
 const dataModel = new DataModel(events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const basket = new Basket(basketTemplate, events);
@@ -42,18 +44,8 @@ events.on('basket:changed', () => {
 });
 const formModel = new FormModel(events);
 
-const order = new Order(orderTemplate, events, formModel);
-const contacts = new Contacts(contactsTemplate, events, formModel);
-
-/*** Отображение карточек товара ***/
-events.on('productCards:receive', () => {
-	dataModel.products.forEach((item) => {
-		const card = new Card(cardCatalogTemplate, events, {
-			onClick: () => events.emit('card:select', item),
-		});
-		ensureElement<HTMLElement>('.gallery').append(card.render(item));
-	});
-});
+const order = new Order(orderTemplate, events);
+const contacts = new Contacts(contactsTemplate, events);
 
 /*** Просмотр карточки товара ***/
 events.on('card:select', (item: IProductItem) => {
@@ -96,8 +88,6 @@ events.on('basket:open', () => {
 	modal.open();
 });
 
-const page = new Page(events);
-
 events.on('basket:item:remove', (item: IProductItem) => {
 	basketModel.deleteCardToBasket(item);
 	basket.setTotal(basketModel.getSumAllProducts());
@@ -115,44 +105,33 @@ events.on('basket:item:remove', (item: IProductItem) => {
 
 /*** Оформление заказа ***/
 events.on('order:open', () => {
-	formModel.items = basketModel.basketProducts.map((item) => item.id);
+	const basketItems = basketModel.basketProducts.map((item) => item.id);
+	const total = basketModel.getSumAllProducts();
 	modal.content = order.render();
 	modal.open();
 });
 
-events.on(
-	'order:payment:changed',
-	(data: { payment: string; forceValidate?: boolean }) => {
-		formModel.payment = data.payment;
-		if (data.forceValidate) {
-			order.valid = formModel.validateOrder();
-		}
-	}
-);
+events.on('order:payment:changed', (data: { payment: string }) => {
+	formModel.payment = data.payment;
+	order.valid = formModel.validateOrder();
+	events.emit('formErrors:change', formModel.errors);
+});
 
-events.on(
-	'order:input',
-	(data: { field: keyof IOrderForm; value: string; validate?: boolean }) => {
-		if (data.field === 'address') {
-			formModel.address = data.value;
-			if (data.validate) {
-				order.valid = formModel.updateOrderValidation();
-			}
-		}
-	}
-);
+events.on('order:input', (data: { field: keyof IOrderForm; value: string }) => {
+	formModel[data.field] = data.value;
+	order.valid = formModel.validateOrder();
+	events.emit('formErrors:change', formModel.errors);
+});
 
 events.on('order:submit', () => {
-	events.emit('contacts:open');
+	if (formModel.validateOrder()) {
+		events.emit('contacts:open');
+	}
 });
 
 /*** Контактные данные ***/
 
-events.on('order:complete', () => {
-	events.emit('success:open');
-});
 events.on('contacts:open', () => {
-	formModel.total = basketModel.getSumAllProducts();
 	modal.content = contacts.render();
 	modal.open();
 });
@@ -160,28 +139,39 @@ events.on('contacts:open', () => {
 events.on(
 	'contacts:input',
 	(data: { field: keyof IOrderForm; value: string }) => {
-		if (data.field === 'email') {
-			formModel.email = data.value;
-		}
-		if (data.field === 'phone') {
-			formModel.phone = data.value;
-		}
+		formModel[data.field] = data.value;
 		contacts.valid = formModel.validateContacts();
 	}
 );
 
+events.on('contacts:submit', () => {
+	if (formModel.validateContacts()) {
+		events.emit('success:open');
+	} else {
+		events.emit('formErrors:change', formModel.errors);
+	}
+});
+
 /*** Успешное оформление ***/
+
+// events.on('order:complete', () => {
+//	events.emit('success:open');
+// });
 events.on('success:open', () => {
+	const orderData: IOrderLot = {
+		...formModel.getOrderLot(), // Данные формы (payment, email, phone, address)
+		items: basketModel.basketProducts.map((item) => item.id), // Товары из корзины
+		total: basketModel.getSumAllProducts(), // Сумма из корзины
+	};
 	apiModel
-		.postOrderLot(formModel.getOrderLot())
+		.postOrderLot(orderData)
 		.then(() => {
-			const success = new Success(successTemplate, events, formModel);
+			const success = new Success(successTemplate, events);
 			success.total = basketModel.getSumAllProducts();
 			modal.content = success.render();
 			basketModel.clearBasketProducts();
 			basket.setTotal(0);
 			basket.setItems([]);
-			events.emit('basket:changed');
 			modal.open();
 		})
 		.catch(console.error);
@@ -199,10 +189,7 @@ events.on('modal:close', () => {
 });
 
 /*** Загрузка данных ***/
-apiModel
-	.getListProductCard()
-	.then((data) => {
-		dataModel.products = data;
-		events.emit('productCards:receive');
-	})
-	.catch((err) => console.error('Error loading products:', err));
+apiModel.getListProductCard().then((data) => {
+	dataModel.products = data;
+	page.renderProducts(dataModel.products, cardCatalogTemplate, events); // ← Вызов метода Page
+});

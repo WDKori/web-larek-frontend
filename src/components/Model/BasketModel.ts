@@ -54,5 +54,6 @@ export class BasketModel implements IBasketModel {
 
 	clearBasketProducts(): void {
 		this.basketProducts = [];
+		this.events.emit('basket:changed');
 	}
 }
